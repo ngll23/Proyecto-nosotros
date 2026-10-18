@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /pairs/{pairId} {
+      function authed() { return request.auth != null; }
+      function member() { return authed() && (resource.data.member0 == request.auth.uid || resource.data.member1 == request.auth.uid); }
+      function pairKeys() { return ['member0', 'member1', 'names', 'done0', 'done1', 'createdAt']; }
+
+      allow create: if authed()
+        && request.resource.data.keys().hasOnly(pairKeys())
+        && request.resource.data.keys().hasAll(pairKeys())
+        && request.resource.data.member0 == request.auth.uid
+        && request.resource.data.member1 == null
+        && request.resource.data.names is list
+        && request.resource.data.names.size() == 2
+        && request.resource.data.done0 == false
+        && request.resource.data.done1 == false;
+
+      allow get: if member();
+      allow list, delete: if false;
+
+      allow update: if authed() && (
+        (resource.data.member1 == null
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member1'])
+          && request.resource.data.member1 == request.auth.uid
+          && resource.data.member0 != request.auth.uid)
+        ||
+        (member()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done0', 'done1'])
+          && (resource.data.member0 != request.auth.uid || (request.resource.data.done0 == true && resource.data.done0 == false && request.resource.data.done1 == resource.data.done1))
+          && (resource.data.member1 != request.auth.uid || (request.resource.data.done1 == true && resource.data.done1 == false && request.resource.data.done0 == resource.data.done0)))
+      );
+
+      match /answers/{slot} {
+        function pair() { return get(/databases/$(database)/documents/pairs/$(pairId)).data; }
+        function own() { return request.auth != null && ((slot == '0' && pair().member0 == request.auth.uid) || (slot == '1' && pair().member1 == request.auth.uid)); }
+        function bothDone() { return pair().done0 && pair().done1; }
+        function payload() {
+          return request.resource.data.keys().hasOnly(['ratings', 'importance', 'choices', 'open'])
+            && request.resource.data.keys().hasAll(['ratings', 'importance', 'choices', 'open'])
+            && request.resource.data.ratings is map
+            && request.resource.data.importance is map
+            && request.resource.data.choices is map
+            && request.resource.data.open is map;
+        }
+
+        allow get: if own() || (request.auth != null && (pair().member0 == request.auth.uid || pair().member1 == request.auth.uid) && bothDone());
+        allow list, delete: if false;
+        allow create, update: if own() && payload();
+      }
+    }
+  }
+}

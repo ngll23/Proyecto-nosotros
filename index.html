@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#241b2c">
+  <meta name="description" content="Una experiencia privada para conversar sobre compatibilidad, acuerdos y proyectos de pareja.">
+  <title>Proyecto Nosotros</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Proyecto Nosotros, inicio">
+        <span class="brand-mark">N</span>
+        <span>Proyecto Nosotros</span>
+      </a>
+      <span class="privacy-pill"><span class="privacy-dot"></span> Privado para dos</span>
+    </header>
+    <main id="app" tabindex="-1"></main>
+    <footer>
+      <p>Una guía para conversar, no un diagnóstico ni una sentencia sobre la relación.</p>
+    </footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="firebase-config.js"></script>
+  <script src="logic.js"></script>
+  <script src="cloud.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
